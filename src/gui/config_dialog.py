@@ -51,7 +51,17 @@ class ConfigDialog(QDialog):
         self.api_key_input = QLineEdit()
         self.api_key_input.setPlaceholderText("Opcional - Necesaria para buscar metadatos")
         self.api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
-        api_layout.addRow("TMDB API Key:", self.api_key_input)
+        
+        # Create layout for API key with toggle button
+        api_key_layout = QHBoxLayout()
+        self.api_key_toggle_btn = QPushButton("👁")
+        self.api_key_toggle_btn.setFixedSize(32, 28)
+        self.api_key_toggle_btn.clicked.connect(self._toggle_api_key_visibility)
+        self._api_key_visible = False
+        api_key_layout.addWidget(self.api_key_input)
+        api_key_layout.addWidget(self.api_key_toggle_btn)
+        
+        api_layout.addRow("TMDB API Key:", api_key_layout)
 
         self.language_combo = QComboBox()
         self.language_combo.addItems(list(self.LANGUAGE_MAP.keys()))
@@ -157,6 +167,16 @@ class ConfigDialog(QDialog):
         self.cache_enabled_check.setChecked(self.config.get("cache.enabled", True))
         self.cache_ttl_spin.setValue(self.config.get("cache.ttl_days", 7))
 
+    def _toggle_api_key_visibility(self) -> None:
+        """Toggle API key visibility between password and plain text."""
+        self._api_key_visible = not self._api_key_visible
+        if self._api_key_visible:
+            self.api_key_input.setEchoMode(QLineEdit.EchoMode.Normal)
+            self.api_key_toggle_btn.setText("🙈")
+        else:
+            self.api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
+            self.api_key_toggle_btn.setText("👁")
+
     def _on_browse_base_dir(self) -> None:
         """Open folder browser for base directory."""
         directory = QFileDialog.getExistingDirectory(
@@ -230,5 +250,9 @@ class ConfigDialog(QDialog):
             )
         else:
             QMessageBox.information(self, "Configuración", "Configuración guardada correctamente.")
+        
+        # Refresh services in main window if API key changed
+        if self.parent() and hasattr(self.parent(), "_create_services"):
+            self.parent()._create_services()
         
         self.accept()

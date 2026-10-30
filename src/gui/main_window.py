@@ -107,6 +107,10 @@ class MainWindow(QMainWindow):
 
     def _init_services(self) -> None:
         """Initialize external services."""
+        self._create_services()
+
+    def _create_services(self) -> None:
+        """Create TMDB and cache services from current config."""
         api_key = self.config.get("api.tmdb_api_key", "")
         language = self.config.get("api.tmdb_language", "es-ES")
 
@@ -116,11 +120,9 @@ class MainWindow(QMainWindow):
         cache_enabled = self.config.get("cache.enabled", True)
         if cache_enabled:
             cache_path = self.config.get("cache.db_path", "cache.db")
-            ttl_days = self.config.get("cache.ttl_days", 7)
             self.cache_service = CacheService(
                 db_path=cache_path,
             )
-            # Set TTL via a method or attribute (we'll use the set method with TTL)
 
     def _init_ui(self) -> None:
         """Initialize user interface."""
