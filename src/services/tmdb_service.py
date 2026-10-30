@@ -1,8 +1,16 @@
 """TMDB API service for fetching media metadata."""
 
-import requests
+import json
+import logging
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+
+import requests
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -23,17 +31,69 @@ class TMDBService:
 
     BASE_URL = "https://api.themoviedb.org/3"
 
-    def __init__(self, api_key: str, language: str = "es-ES"):
+    def __init__(self, api_key: str, language: str = "es-ES", log_dir: Optional[str] = None):
         """Initialize TMDB service.
 
         Args:
             api_key: TMDB API key
             language: Language code for results (default: es-ES)
+            log_dir: Directory to store API logs (default: ~/.mediaorganizer/logs)
         """
         self.api_key = api_key
         self.language = language
         self._session = requests.Session()
         self._session.params = {"api_key": api_key, "language": language}
+        
+        # Setup logging
+        if log_dir is None:
+            log_dir = str(Path.home() / ".mediaorganizer" / "logs")
+        self.log_dir = Path(log_dir)
+        self.log_dir.mkdir(parents=True, exist_ok=True)
+        self.log_file = self.log_dir / "tmdb_api.log"
+        
+        # Initialize log file with header
+        if not self.log_file.exists():
+            self._write_log_header()
+
+    def _write_log_header(self) -> None:
+        """Write header to log file."""
+        with open(self.log_file, "w", encoding="utf-8") as f:
+            f.write("# TMDB API Logs - MediaOrganizer\n")
+            f.write(f"# Started: {datetime.now().isoformat()}\n")
+            f.write("# Format: [TIMESTAMP] METHOD URL | STATUS | QUERY_PARAMS\n")
+            f.write("# " + "=" * 80 + "\n\n")
+
+    def _log_request(self, method: str, url: str, params: dict, status_code: int, response_data: Optional[dict] = None) -> None:
+        """Log API request and response.
+        
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            url: Request URL
+            params: Query parameters
+            status_code: HTTP status code
+            response_data: Response data (truncated if too large)
+        """
+        timestamp = datetime.now().isoformat()
+        
+        # Truncate params for logging (remove api_key for security)
+        safe_params = {k: v for k, v in params.items() if k != "api_key"}
+        
+        # Log request line
+        with open(self.log_file, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] {method} {url}\n")
+            f.write(f"  Params: {json.dumps(safe_params, ensure_ascii=False)}\n")
+            f.write(f"  Status: {status_code}\n")
+            
+            # Log response if available (truncated to 500 chars)
+            if response_data:
+                response_str = json.dumps(response_data, ensure_ascii=False, default=str)
+                if len(response_str) > 500:
+                    response_str = response_str[:500] + f"... (truncated, total {len(response_str)} chars)"
+                f.write(f"  Response: {response_str}\n")
+            
+            f.write("\n" + "-" * 80 + "\n\n")
+        
+        logger.debug(f"TMDB API: {method} {url} -> {status_code}")
 
     def search(self, query: str, year: Optional[int] = None) -> list[TMDBSearchResult]:
         """Search for movies and TV shows.
@@ -46,16 +106,24 @@ class TMDBService:
             List of TMDBSearchResult objects
         """
         results = []
-
+        params = {"query": query, "include_adult": "false"}
+        if year:
+            params["year"] = str(year)
+        
+        url = f"{self.BASE_URL}/search/multi"
+        
         # Search multi (movies and TV)
-        response = self._session.get(
-            f"{self.BASE_URL}/search/multi",
-            params={"query": query, "include_adult": "false"},
-        )
-
+        response = self._session.get(url, params=params)
+        
+        # Log the request/response
+        response_data = None
         if response.status_code == 200:
-            data = response.json()
-            for item in data.get("results", []):
+            response_data = response.json()
+        
+        self._log_request("GET", url, params, response.status_code, response_data)
+        
+        if response.status_code == 200 and response_data:
+            for item in response_data.get("results", []):
                 if item.get("media_type") not in ["movie", "tv"]:
                     continue
 
@@ -90,9 +158,14 @@ class TMDBService:
         Returns:
             Dictionary with movie details
         """
-        response = self._session.get(f"{self.BASE_URL}/movie/{tmdb_id}")
+        url = f"{self.BASE_URL}/movie/{tmdb_id}"
+        response = self._session.get(url)
+        
+        response_data = response.json() if response.status_code == 200 else None
+        self._log_request("GET", url, {}, response.status_code, response_data)
+        
         if response.status_code == 200:
-            return response.json()
+            return response_data
         return {}
 
     def get_tv_details(self, tmdb_id: int) -> dict:
@@ -104,9 +177,14 @@ class TMDBService:
         Returns:
             Dictionary with TV show details
         """
-        response = self._session.get(f"{self.BASE_URL}/tv/{tmdb_id}")
+        url = f"{self.BASE_URL}/tv/{tmdb_id}"
+        response = self._session.get(url)
+        
+        response_data = response.json() if response.status_code == 200 else None
+        self._log_request("GET", url, {}, response.status_code, response_data)
+        
         if response.status_code == 200:
-            return response.json()
+            return response_data
         return {}
 
     def get_episode_details(
@@ -122,9 +200,12 @@ class TMDBService:
         Returns:
             Dictionary with episode details
         """
-        response = self._session.get(
-            f"{self.BASE_URL}/tv/{tv_id}/season/{season}/episode/{episode}"
-        )
+        url = f"{self.BASE_URL}/tv/{tv_id}/season/{season}/episode/{episode}"
+        response = self._session.get(url)
+        
+        response_data = response.json() if response.status_code == 200 else None
+        self._log_request("GET", url, {}, response.status_code, response_data)
+        
         if response.status_code == 200:
-            return response.json()
+            return response_data
         return {}

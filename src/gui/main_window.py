@@ -115,7 +115,8 @@ class MainWindow(QMainWindow):
         language = self.config.get("api.tmdb_language", "es-ES")
 
         if api_key:
-            self.tmdb_service = TMDBService(api_key=api_key, language=language)
+            log_dir = str(Path.home() / ".mediaorganizer" / "logs")
+            self.tmdb_service = TMDBService(api_key=api_key, language=language, log_dir=log_dir)
 
         cache_enabled = self.config.get("cache.enabled", True)
         if cache_enabled:
@@ -160,6 +161,12 @@ class MainWindow(QMainWindow):
         self.btn_process.clicked.connect(self._on_process)
         self.btn_process.setEnabled(False)
         toolbar_layout.addWidget(self.btn_process)
+
+        toolbar_layout.addStretch()
+
+        self.btn_logs = QPushButton("Logs TMDB")
+        self.btn_logs.clicked.connect(self._on_open_logs)
+        toolbar_layout.addWidget(self.btn_logs)
 
         self.btn_remove = QPushButton("Eliminar")
         self.btn_remove.clicked.connect(self._on_remove_selected)
@@ -305,6 +312,43 @@ class MainWindow(QMainWindow):
                 self.status_label.setText("No hay archivos en la lista")
             else:
                 self.status_label.setText(f"{len(self.media_files)} archivo(s) en la lista")
+
+    def _on_open_logs(self) -> None:
+        """Open TMDB API log file in system default application."""
+        log_dir = Path.home() / ".mediaorganizer" / "logs"
+        log_file = log_dir / "tmdb_api.log"
+        
+        if not log_file.exists():
+            QMessageBox.information(
+                self,
+                "Logs TMDB",
+                "No hay logs disponibles.\n\nLos logs se generarán cuando hagas una vista previa.",
+            )
+            return
+        
+        # Open file with system default application
+        import subprocess
+        import sys
+        
+        try:
+            if sys.platform == "darwin":  # macOS
+                subprocess.call(["open", str(log_file)])
+            elif sys.platform == "win32":  # Windows
+                subprocess.call(["start", str(log_file)], shell=True)
+            else:  # Linux
+                subprocess.call(["xdg-open", str(log_file)])
+            
+            QMessageBox.information(
+                self,
+                "Logs TMDB",
+                f"Logs abiertos:\n{log_file}",
+            )
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Error",
+                f"No se pudo abrir el archivo de logs:\n{str(e)}\n\nRuta: {log_file}",
+            )
 
     def _on_config(self) -> None:
         """Handle config button click."""
