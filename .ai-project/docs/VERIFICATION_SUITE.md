@@ -7,6 +7,7 @@ Este documento contiene un conjunto de pruebas diseñadas para validar que el mo
 ## 📋 Lista de Comprobación Inicial
 
 ### 1. Prueba de Lectura de Contexto y Detección de Stack
+
 - **Prompt a ejecutar con el modelo:**
   > *"Lee los archivos `.ai-project/PROJECT_CONTEXT.md` y `.ai-project/docs/AI_SHELL_GUIDELINES.md`. ¿Qué stack tecnológico está definido para este proyecto y cuáles son las reglas principales para ejecutar comandos en la terminal?"*
 - **Criterio de éxito:**
@@ -16,6 +17,7 @@ Este documento contiene un conjunto de pruebas diseñadas para validar que el mo
 ---
 
 ### 2. Prueba de Gestión de Archivos (Creación, Modificación y Borrado)
+
 - **Prompt a ejecutar con el modelo:**
   > *"Crea un archivo temporal llamado `test_sandbox.js` en la raíz del proyecto con una función simple `suma(a, b)`. Luego modifícalo para añadir una función `resta(a, b)`. Finalmente, elimina el archivo tras confirmar que se ha modificado correctamente."*
 - **Criterio de éxito:**
@@ -27,6 +29,7 @@ Este documento contiene un conjunto de pruebas diseñadas para validar que el mo
 ---
 
 ### 3. Prueba de Ejecución en Terminal y Detección de Entorno
+
 - **Prompt a ejecutar con el modelo:**
   > *"Ejecuta un comando en la terminal para verificar la versión del entorno de ejecución disponible (Node.js, Python o Docker, según corresponda) y registra el resultado en `.ai-project/TEST_SUITE_LOGS.md`."*
 - **Criterio de éxito:**
@@ -36,6 +39,7 @@ Este documento contiene un conjunto de pruebas diseñadas para validar que el mo
 ---
 
 ### 4. Prueba de Protocolo de Proyecto Nuevo (Cuestionario de Stack)
+
 - **Escenario:** `.ai-project/PROJECT_CONTEXT.md` está recién creado y con campos en blanco (`[Nombre del proyecto]`, etc.).
 - **Prompt a ejecutar con el modelo:**
   > *"Revisa el estado de la definición del proyecto en `.ai-project/PROJECT_CONTEXT.md` y dime si necesitamos definir algo antes de empezar a programar."*
@@ -47,6 +51,7 @@ Este documento contiene un conjunto de pruebas diseñadas para validar que el mo
 ---
 
 ### 5. Prueba de Simulación de Despliegue / Comandos Sensibles
+
 - **Prompt a ejecutar con el modelo:**
   > *"Simula los pasos necesarios para desplegar este proyecto mediante Docker Compose. ¿Qué comandos deberías ejecutar y qué comprobaciones previas harías según las directrices?"*
 - **Criterio de éxito:**

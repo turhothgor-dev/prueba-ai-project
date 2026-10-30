@@ -145,6 +145,11 @@ class MainWindow(QMainWindow):
 
         toolbar_layout.addStretch()
 
+        self.btn_preview = QPushButton("Vista Previa")
+        self.btn_preview.clicked.connect(self._on_preview)
+        self.btn_preview.setEnabled(False)
+        toolbar_layout.addWidget(self.btn_preview)
+
         self.btn_config = QPushButton("Configuración")
         self.btn_config.clicked.connect(self._on_config)
         toolbar_layout.addWidget(self.btn_config)
@@ -158,13 +163,14 @@ class MainWindow(QMainWindow):
 
         # File table
         self.table_files = QTableWidget()
-        self.table_files.setColumnCount(5)
+        self.table_files.setColumnCount(6)
         self.table_files.setHorizontalHeaderLabels([
-            "Archivo", "Título", "Temporada", "Episodio", "Estado"
+            "Archivo", "Título", "Temp.", "Epis.", "Nuevo Nombre", "Estado"
         ])
         self.table_files.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.Stretch
         )
+        self.table_files.setColumnWidth(4, 250)
         layout.addWidget(self.table_files)
 
         # Status bar
@@ -228,18 +234,116 @@ class MainWindow(QMainWindow):
             episode_text = str(media_file.episode) if media_file.episode else "-"
             self.table_files.setItem(row, 3, QTableWidgetItem(episode_text))
 
+            # New name (empty until preview)
+            new_name_item = QTableWidgetItem("-")
+            new_name_item.setForeground(Qt.GlobalColor.darkGray)
+            self.table_files.setItem(row, 4, new_name_item)
+
             # Status
             status_item = QTableWidgetItem("Pendiente")
             status_item.setForeground(Qt.GlobalColor.darkGray)
-            self.table_files.setItem(row, 4, status_item)
+            self.table_files.setItem(row, 5, status_item)
 
         self.btn_process.setEnabled(True)
+        self.btn_preview.setEnabled(True)
         self.status_label.setText(f"{len(files)} archivo(s) añadido(s)")
 
     def _on_config(self) -> None:
         """Handle config button click."""
         dialog = ConfigDialog(self.config, self)
         dialog.exec()
+
+    def _on_preview(self) -> None:
+        """Handle preview button click."""
+        if not self.media_files:
+            QMessageBox.warning(
+                self, "Advertencia", "No hay archivos para previsualizar."
+            )
+            return
+
+        if not self.tmdb_service:
+            QMessageBox.warning(
+                self,
+                "Advertencia",
+                "Configura tu API Key de TMDB en Configuración > API para obtener metadatos.",
+            )
+            return
+
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(0)
+        self.btn_preview.setEnabled(False)
+        self.btn_process.setEnabled(False)
+        self.status_label.setText("Generando vista previa...")
+
+        # Create organizer for preview
+        organizer = FileOrganizer(
+            config=self.config,
+            cache_service=self.cache_service,
+            tmdb_service=self.tmdb_service,
+        )
+
+        total = len(self.media_files)
+        success_count = 0
+        failed_count = 0
+
+        for i, media_file in enumerate(self.media_files):
+            # Update status
+            self.status_label.setText(
+                f"Preview {i + 1}/{total}: {media_file.original_filename}"
+            )
+
+            # Run preview
+            success, new_filename, new_path = organizer.preview(media_file)
+
+            # Update table
+            if success:
+                success_count += 1
+                # Update new name column
+                new_name_item = QTableWidgetItem(new_filename)
+                new_name_item.setForeground(Qt.GlobalColor.darkGreen)
+                self.table_files.setItem(i, 4, new_name_item)
+
+                # Update status
+                status_item = QTableWidgetItem("✓ Listo")
+                status_item.setForeground(Qt.GlobalColor.darkGreen)
+                self.table_files.setItem(i, 5, status_item)
+            else:
+                failed_count += 1
+                # Update new name column with error
+                new_name_item = QTableWidgetItem("Error")
+                new_name_item.setForeground(Qt.GlobalColor.darkRed)
+                self.table_files.setItem(i, 4, new_name_item)
+
+                # Update status with error message
+                status_item = QTableWidgetItem("✗ Error")
+                status_item.setForeground(Qt.GlobalColor.darkRed)
+                self.table_files.setItem(i, 5, status_item)
+
+            # Update progress
+            progress = int(((i + 1) / total) * 100)
+            self.progress_bar.setValue(progress)
+
+        # Show summary
+        summary = f"Vista previa completada: {success_count} listo(s)"
+        if failed_count > 0:
+            summary += f" | {failed_count} con error(es)"
+
+        self.status_label.setText(summary)
+        self.btn_preview.setEnabled(True)
+        self.btn_process.setEnabled(True)
+
+        if failed_count > 0:
+            QMessageBox.warning(
+                self,
+                "Advertencia",
+                f"La vista previa mostró {failed_count} error(es).\n{summary}",
+            )
+        else:
+            QMessageBox.information(
+                self,
+                "Vista Previa",
+                f"Todos los {success_count} archivos pueden ser organizados.\n\n{summary}",
+            )
 
     def _on_process(self) -> None:
         """Handle process button click."""

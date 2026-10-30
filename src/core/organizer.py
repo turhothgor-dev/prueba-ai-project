@@ -236,3 +236,55 @@ class FileOrganizer:
         else:
             # If no base directory, use the file's current directory
             return media_file.path.parent / dir_name / filename
+
+    def preview(self, media_file: MediaFile) -> tuple[bool, str, str]:
+        """Preview the changes for a media file without moving it.
+
+        This method simulates the organization process and returns
+        what would happen without actually moving any files.
+
+        Args:
+            media_file: The MediaFile to preview
+
+        Returns:
+            Tuple of (success, new_filename, new_path)
+            - success: True if the file would be organized successfully
+            - new_filename: The new filename that would be used
+            - new_path: The full destination path
+        """
+        try:
+            # Step 1: Ensure we have metadata
+            if not media_file.metadata_fetched:
+                if not self._fetch_metadata(media_file):
+                    return (
+                        False,
+                        media_file.original_filename,
+                        f"No se encontraron metadatos para '{media_file.original_filename}'",
+                    )
+                media_file.metadata_fetched = True
+
+            # Step 2: Generate new path
+            new_path = self._generate_new_path(media_file)
+            new_filename = new_path.name
+
+            # Step 3: Check for conflicts
+            if new_path.exists() and not self.replace_existing:
+                return (
+                    False,
+                    new_filename,
+                    f"Conflicto: el archivo ya existe en destino",
+                )
+
+            # Step 4: Check source file exists
+            if not media_file.exists():
+                return (
+                    False,
+                    new_filename,
+                    f"El archivo original no existe: {media_file.path}",
+                )
+
+            return True, new_filename, str(new_path)
+
+        except Exception as e:
+            logger.error(f"Error en preview de {media_file.path}: {e}")
+            return False, media_file.original_filename, f"Error: {str(e)}"

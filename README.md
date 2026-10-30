@@ -15,7 +15,7 @@ Aplicación de escritorio para organizar y renombrar archivos de video usando me
 
 - Python 3.11+
 - PyQt6
-- TMDB API Key (gratuita en https://www.themoviedb.org/settings/api)
+- TMDB API Key (gratuita en <https://www.themoviedb.org/settings/api>)
 
 ## 🔧 Instalación
 
@@ -61,7 +61,7 @@ python -m src.main
 
 ## 📁 Estructura del Proyecto
 
-```
+```text
 MediaOrganizer/
 ├── src/
 │   ├── core/           # Lógica de negocio y modelos
@@ -108,8 +108,10 @@ La configuración se guarda en `~/.mediaorganizer/config.json`
 
 ### Patrones disponibles
 
+Season y Episode solo tendrá sentido en series, no en películas.
+
 | Placeholder | Descripción |
-|-------------|-------------|
+| ------------- | ------------- |
 | `{title}` | Título de la película/serie |
 | `{year}` | Año de lanzamiento |
 | `{season}` | Número de temporada |
@@ -119,10 +121,10 @@ La configuración se guarda en `~/.mediaorganizer/config.json`
 
 ### Ejemplos de patrones
 
-- **Películas**: `{title} ({year})`
-- **Series**: `{title}/Season {season}/{title} - S{season:02d}E{episode:02d}`
+- **Películas**: `{title} - ({year}) - [tmdbid-{tmdb_id}]`
+- **Series**: `{title}/Season {season}/{title} - S{season:02d}E{episode:02d} - [tmdbid-{tmdb_id}]`
 
-## 🤝 Contribuir
+## 🤝 Contribuir[tmdbid-{tmdb_id}][tmdbid-{[tmdbid-{tmdb_id}]tmdb_id}]
 
 1. Fork el repositorio
 2. Crea una rama (`git checkout -b feature/AmazingFeature`)

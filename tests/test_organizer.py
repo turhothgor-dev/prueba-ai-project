@@ -330,3 +330,180 @@ class TestFileOrganizer:
         success, message = organizer.organize(media_file)
 
         assert success is True
+
+
+    # === Tests para Preview ===
+
+    def test_preview_movie(self, config, mock_tmdb_service, cache_service, temp_dir):
+        """Test preview for a movie file."""
+        config.set("organization.file_pattern", "{title} ({year})")
+        organizer = FileOrganizer(
+            config=config,
+            cache_service=cache_service,
+            tmdb_service=mock_tmdb_service,
+        )
+
+        # Create test file
+        test_file = temp_dir / "test.movie.2024.mkv"
+        test_file.parent.mkdir(parents=True, exist_ok=True)
+        test_file.touch()
+
+        # Create MediaFile
+        media_file = MediaFile.from_path(test_file)
+        media_file.title = "Test Movie"
+        media_file.year = 2024
+        media_file.metadata_fetched = True
+
+        # Preview
+        success, new_filename, new_path = organizer.preview(media_file)
+
+        assert success is True
+        assert "Test Movie (2024)" in new_filename
+        assert new_path.endswith(".mkv")
+
+    def test_preview_series(self, config, mock_tmdb_service, cache_service, temp_dir):
+        """Test preview for a TV series file."""
+        config.set("organization.file_pattern", "{title} - S{season:02d}E{episode:02d}")
+        organizer = FileOrganizer(
+            config=config,
+            cache_service=cache_service,
+            tmdb_service=mock_tmdb_service,
+        )
+
+        # Create test file
+        test_file = temp_dir / "test.show.s01e05.mkv"
+        test_file.parent.mkdir(parents=True, exist_ok=True)
+        test_file.touch()
+
+        # Create MediaFile
+        media_file = MediaFile.from_path(test_file)
+        media_file.guess_info_from_filename()
+        media_file.title = "Test Show"
+        media_file.year = 2023
+        media_file.metadata_fetched = True
+
+        # Preview
+        success, new_filename, new_path = organizer.preview(media_file)
+
+        assert success is True
+        assert "Test Show (2023)" in new_path
+        assert "S01E05" in new_filename
+
+    def test_preview_no_metadata(self, config, mock_tmdb_service, cache_service, temp_dir):
+        """Test preview when no metadata can be found."""
+        organizer = FileOrganizer(
+            config=config,
+            cache_service=cache_service,
+            tmdb_service=mock_tmdb_service,
+        )
+
+        # Mock TMDB to return no results
+        organizer.tmdb.search = MagicMock(return_value=[])
+
+        # Create test file
+        test_file = temp_dir / "unknown.file.mkv"
+        test_file.parent.mkdir(parents=True, exist_ok=True)
+        test_file.touch()
+
+        # Create MediaFile without metadata
+        media_file = MediaFile.from_path(test_file)
+
+        # Preview
+        success, new_filename, new_path = organizer.preview(media_file)
+
+        assert success is False
+        assert "metadatos" in new_path.lower()
+
+    def test_preview_file_not_found(self, config, mock_tmdb_service, cache_service):
+        """Test preview for a file that doesn't exist."""
+        organizer = FileOrganizer(
+            config=config,
+            cache_service=cache_service,
+            tmdb_service=mock_tmdb_service,
+        )
+
+        # Create MediaFile for non-existent file
+        media_file = MediaFile.from_path("/nonexistent/file.mkv")
+        media_file.title = "Nonexistent"
+        media_file.year = 2024
+        media_file.metadata_fetched = True
+
+        # Preview
+        success, new_filename, new_path = organizer.preview(media_file)
+
+        assert success is False
+        assert "no existe" in new_path.lower()
+
+    def test_preview_conflict(self, config, mock_tmdb_service, cache_service, tmp_path):
+        """Test preview when destination file already exists."""
+        temp_dir = tmp_path / "media"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        
+        config_file = temp_dir / "config.json"
+        config_dir = temp_dir / "config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config = Config(config_file)
+        config.set("organization.base_directory", str(temp_dir))
+        config.set("organization.replace_existing", False)
+        config.set("organization.file_pattern", "{title} ({year})")
+        config.set("organization.folder_pattern", "{title} ({year})")
+        config.set("organization.create_season_folders", False)
+        
+        organizer = FileOrganizer(
+            config=config,
+            cache_service=CacheService(db_path=temp_dir / "cache.db"),
+            tmdb_service=MagicMock(spec=TMDBService),
+        )
+
+        # Create destination file
+        dest_dir = temp_dir / "Test (2024)"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest_file = dest_dir / "Test (2024).mkv"
+        dest_file.touch()
+
+        # Create source file
+        source_file = temp_dir / "source.mkv"
+        source_file.touch()
+
+        # Create MediaFile
+        media_file = MediaFile.from_path(source_file)
+        media_file.title = "Test"
+        media_file.year = 2024
+        media_file.metadata_fetched = True
+
+        # Preview
+        success, new_filename, new_path = organizer.preview(media_file)
+
+        assert success is False
+        assert "Conflicto" in new_path or "ya existe" in new_path
+
+    def test_preview_replace_enabled(self, config, mock_tmdb_service, cache_service, temp_dir):
+        """Test preview with replace_existing enabled."""
+        config.set("organization.replace_existing", True)
+        config.set("organization.file_pattern", "{title} ({year})")
+        organizer = FileOrganizer(
+            config=config,
+            cache_service=cache_service,
+            tmdb_service=mock_tmdb_service,
+        )
+
+        # Create destination file
+        dest_dir = temp_dir / "organized" / "Test (2024)"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest_file = dest_dir / "Test (2024).mkv"
+        dest_file.touch()
+
+        # Create source file
+        source_file = temp_dir / "source.mkv"
+        source_file.touch()
+
+        # Create MediaFile
+        media_file = MediaFile.from_path(source_file)
+        media_file.title = "Test"
+        media_file.year = 2024
+        media_file.metadata_fetched = True
+
+        # Preview
+        success, new_filename, new_path = organizer.preview(media_file)
+
+        assert success is True  # Should succeed because replace is enabled

@@ -7,7 +7,7 @@
 ## 📊 Resumen de Estado
 
 | Métrica | Valor |
-|---------|-------|
+| --------- | ------- |
 | **Versión** | 0.1.0 |
 | **Tests Unitarios** | 22/22 passing ✅ |
 | **Módulos Core** | 100% implementados |
@@ -51,7 +51,7 @@
 
 - [x] **API key de TMDB opcional (no bloquea configuración)**
 - [x] **Configuración siempre se guarda (sin pérdida de datos)**
-- [ ] Vista previa de cambios antes de aplicar
+- [x] **Vista previa de cambios antes de aplicar**
 - [ ] Manejo de errores y logging mejorado
 - [ ] Validación de patrones en la GUI
 
@@ -77,7 +77,7 @@
 ## 📈 Próximos Hitos
 
 | Hito | Descripción | Estado |
-|------|-------------|--------|
+| ------ | ------------- | -------- |
 | **v0.2.0** | Vista previa de cambios + logging | 📋 Pendiente |
 | **v0.3.0** | Tests de integración + IMDb | 📋 Pendiente |
 | **v0.4.0** | Builds con PyInstaller | 📋 Pendiente |
