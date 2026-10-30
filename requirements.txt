@@ -1,0 +1,25 @@
+# MediaOrganizer - Dependencies
+# Core
+PyQt6>=6.6.0
+requests>=2.31.0
+
+# Data handling
+tmdbv3api>=1.7.0
+imdbpy>=2023.9.15
+
+# Configuration
+PyYAML>=6.0.1
+
+# Database
+sqlite-utils>=3.36
+
+# Utilities
+pathvalidate>=3.2.0
+python-dotenv>=1.0.0
+
+# Development
+pytest>=7.4.0
+pytest-qt>=4.2.0
+black>=23.0.0
+ruff>=0.1.0
+pyinstaller>=6.0.0

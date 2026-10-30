@@ -1,0 +1,39 @@
+# Directrices de Desarrollo del Proyecto
+
+## Reglas de Comportamiento según Modo Activo
+
+### Modo PLAN (Arquitecto)
+
+- **Rol:** Analizar requerimientos, diseñar arquitectura y redactar instrucciones paso a paso.
+- **Restricción:** NUNCA modifiques archivos ni ejecutes comandos de código. Solo genera análisis, esquemas y prompts.
+- **Relevo:** Al finalizar el diseño, genera siempre el bloque exacto de instrucciones para enviar al modo ACT.
+
+### Modo ACT (Programador)
+
+- **Rol:** Ejecutar fielmente los diseños técnicos proporcionados por el modo PLAN o el usuario.
+- **Acción:** Aplica parches limpios de código y comandos no interactivos en la terminal.
+
+---
+
+## Directrices de Proyecto y Habilidades
+
+1. Lee siempre `.ai-project/PROJECT_CONTEXT.md` antes de realizar cambios o escribir código.
+2. Sigue las reglas de ejecución de comandos descritas en `.ai-project/docs/AI_SHELL_GUIDELINES.md`.
+3. Sigue el protocolo de modificación limpia de ficheros definido en `.ai-project/docs/AI_FILE_OPERATIONS.md`.
+4. Habilidades disponibles en `.ai-project/skills/`:
+   - `project-bootstrap.md` (Inicializar contexto y stack)
+   - `shell-operator.md` (Comandos en terminal no interactivos)
+   - `file-system-manager.md` (Parches limpios de código y gestión de archivos)
+   - `continue-configurator.md` (Ajustes de modelos e IDE)
+
+---
+
+## Atajos de Protocolo
+
+### /bootstrap
+
+Lee `.ai-project/skills/project-bootstrap.md` y `.ai-project/PROJECT_CONTEXT.md`. Si el proyecto está en borrador o incompleto, formula las preguntas para definir el stack.
+
+### /delegar-programador
+
+A partir de nuestra conversación actual, redacta una especificación técnica clara y un prompt directo para copiar y enviar al modo ACT (Programador).

@@ -1,0 +1,39 @@
+name: Global AI Assistant Suite
+version: 1.0.0
+
+rules:
+  - >
+    Por favor, lee siempre .ai-project/PROJECT_CONTEXT.md antes de realizar cambios o escribir código.
+  - >
+    Sigue las reglas de ejecución de comandos descritas en .ai-project/docs/AI_SHELL_GUIDELINES.md.
+  - >
+    Sigue el protocolo de modificación limpia de ficheros definido en .ai-project/docs/AI_FILE_OPERATIONS.md.
+  - >
+    Tienes a tu disposición las siguientes habilidades en .ai-project/skills/:
+    - project-bootstrap.md (Inicializar contexto y stack)
+    - shell-operator.md (Comandos en terminal no interactivos)
+    - file-system-manager.md (Parches limpios de código y gestión de archivos)
+    - continue-configurator.md (Ajustes de modelos e IDE)
+
+prompts:
+  - name: bootstrap
+    description: "Ejecutar protocolo de inicialización del proyecto"
+    prompt: >
+      Lee .ai-project/skills/project-bootstrap.md y .ai-project/PROJECT_CONTEXT.md.
+      Si el proyecto está en borrador o incompleto, formula las preguntas para definir el stack.
+
+models:
+  - name: "Arquitecto - Claude 3.5 Sonnet"
+    provider: anthropic
+    model: claude-3-5-sonnet-latest
+    roles: [chat]
+
+  - name: "Arquitecto Supremo - Claude Opus"
+    provider: anthropic
+    model: claude-3-opus-latest
+    roles: [chat]
+
+  - name: "Programador - Claude 3.5 Sonnet"
+    provider: anthropic
+    model: claude-3-5-sonnet-latest
+    roles: [edit]

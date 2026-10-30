@@ -1,0 +1,24 @@
+{
+  "api": {
+    "tmdb_api_key": "",
+    "tmdb_language": "es-ES",
+    "use_imdb": false
+  },
+  "organization": {
+    "base_directory": "",
+    "folder_pattern": "{title} ({year})",
+    "file_pattern": "{title} - S{season:02d}E{episode:02d}",
+    "create_season_folders": true,
+    "replace_existing": false
+  },
+  "cache": {
+    "enabled": true,
+    "ttl_days": 7,
+    "db_path": "cache.db"
+  },
+  "ui": {
+    "language": "es",
+    "theme": "system",
+    "show_preview": true
+  }
+}
