@@ -161,6 +161,11 @@ class MainWindow(QMainWindow):
         self.btn_process.setEnabled(False)
         toolbar_layout.addWidget(self.btn_process)
 
+        self.btn_remove = QPushButton("Eliminar")
+        self.btn_remove.clicked.connect(self._on_remove_selected)
+        self.btn_remove.setEnabled(False)
+        toolbar_layout.addWidget(self.btn_remove)
+
         layout.addLayout(toolbar_layout)
 
         # File table
@@ -173,6 +178,12 @@ class MainWindow(QMainWindow):
             0, QHeaderView.ResizeMode.Stretch
         )
         self.table_files.setColumnWidth(4, 250)
+        
+        # Enable row selection
+        self.table_files.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table_files.setSelectionMode(QTableWidget.SelectionMode.ExtendedSelection)
+        self.table_files.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table_files.itemSelectionChanged.connect(self._on_selection_changed)
         layout.addWidget(self.table_files)
 
         # Status bar
@@ -248,7 +259,52 @@ class MainWindow(QMainWindow):
 
         self.btn_process.setEnabled(True)
         self.btn_preview.setEnabled(True)
+        self.btn_remove.setEnabled(True)
         self.status_label.setText(f"{len(files)} archivo(s) añadido(s)")
+
+    def _on_selection_changed(self) -> None:
+        """Handle row selection changes."""
+        selected_rows = self.table_files.selectedItems()
+        if selected_rows:
+            self.btn_remove.setEnabled(True)
+        else:
+            self.btn_remove.setEnabled(False)
+
+    def _on_remove_selected(self) -> None:
+        """Remove selected files from the list."""
+        selected_rows = sorted(set(item.row() for item in self.table_files.selectedItems()), reverse=True)
+        
+        if not selected_rows:
+            return
+        
+        # Confirm deletion
+        count = len(selected_rows)
+        result = QMessageBox.question(
+            self,
+            "Eliminar Archivos",
+            f"¿Eliminar {count} archivo(s) de la lista?\n\nEsta acción solo elimina de la lista, no borra los archivos del disco.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        
+        if result == QMessageBox.StandardButton.Yes:
+            # Remove from media_files list (in reverse order to maintain indices)
+            for row in selected_rows:
+                if row < len(self.media_files):
+                    self.media_files.pop(row)
+            
+            # Remove table rows (in reverse order)
+            for row in selected_rows:
+                self.table_files.removeRow(row)
+            
+            # Reset buttons if no files left
+            if not self.media_files:
+                self.btn_process.setEnabled(False)
+                self.btn_preview.setEnabled(False)
+                self.btn_remove.setEnabled(False)
+                self.status_label.setText("No hay archivos en la lista")
+            else:
+                self.status_label.setText(f"{len(self.media_files)} archivo(s) en la lista")
 
     def _on_config(self) -> None:
         """Handle config button click."""
@@ -311,8 +367,17 @@ class MainWindow(QMainWindow):
                 self.table_files.setItem(i, 5, status_item)
             else:
                 failed_count += 1
-                # Update new name column with error
-                new_name_item = QTableWidgetItem("Error")
+                # Update new name column with specific error message
+                if "metadatos" in new_path.lower() or "match" in new_path.lower():
+                    error_msg = "Sin match"
+                elif "conflicto" in new_path.lower() or "ya existe" in new_path.lower():
+                    error_msg = "Conflicto"
+                elif "no existe" in new_path.lower():
+                    error_msg = "Archivo ausente"
+                else:
+                    error_msg = "Error"
+
+                new_name_item = QTableWidgetItem(error_msg)
                 new_name_item.setForeground(Qt.GlobalColor.darkRed)
                 self.table_files.setItem(i, 4, new_name_item)
 
