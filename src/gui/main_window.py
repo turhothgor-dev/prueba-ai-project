@@ -115,8 +115,7 @@ class MainWindow(QMainWindow):
         language = self.config.get("api.tmdb_language", "es-ES")
 
         if api_key:
-            log_dir = str(Path.home() / ".mediaorganizer" / "logs")
-            self.tmdb_service = TMDBService(api_key=api_key, language=language, log_dir=log_dir)
+            self.tmdb_service = TMDBService(api_key=api_key, language=language)
 
         cache_enabled = self.config.get("cache.enabled", True)
         if cache_enabled:
@@ -313,7 +312,7 @@ class MainWindow(QMainWindow):
     def _on_open_logs(self) -> None:
         """Open TMDB API log file in system default application."""
         log_dir = Path.home() / ".mediaorganizer" / "logs"
-        log_file = log_dir / "tmdb_api.log"
+        log_file = log_dir / "mediaorganizer.log"
 
         if not log_file.exists():
             QMessageBox.information(

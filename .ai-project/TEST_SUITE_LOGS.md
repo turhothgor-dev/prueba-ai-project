@@ -57,3 +57,52 @@
 - Import: src.main funciona correctamente ?
 
 **Paso 1.1 ahora COMPLETO al 100%**
+
+
+## Fase 1, Paso 1.2 - Mejorar logging en TMDB Service - 06/11/2026 14:15:00
+
+**Archivos modificados:**
+- src/services/tmdb_service.py
+- src/gui/main_window.py
+
+**Cambios en tmdb_service.py:**
+- Reemplazado logger = logging.getLogger(__name__) por get_logger(__name__)
+- Eliminado _write_log_header() y log_file separado
+- _log_request() mejorado con niveles apropiados (DEBUG/WARNING/ERROR)
+- Agregado parámetro elapsed para medir tiempo de respuesta
+- Agregado manejo de excepciones (Timeout, ConnectionError, RequestException)
+- Agregado logging.debug para operaciones exitosas
+- Agregado logging.warning para errores y fallos
+
+**Cambios en main_window.py:**
+- Eliminado log_dir del constructor de TMDBService
+- Actualizado _on_open_logs() a mediaorganizer.log
+
+**Verificaciones:**
+- Ruff: All checks passed ? (1 warning closeEvent - PyQt6 convention)
+- Tests: 28/28 passing ?
+- Imports: Todos exitosos ?
+
+
+## Fase 1, Paso 1.3 - Mejorar logging en FileOrganizer - 06/11/2026 14:30:00
+
+**Archivo modificado:** src/core/organizer.py
+
+**Cambios:**
+- Reemplazado logger = logging.getLogger(__name__) por get_logger(__name__)
+- Eliminado import logging (ahora usa logger centralizado)
+- organize(): logging INFO al inicio, DEBUG para paths, WARNING para conflictos, ERROR para fallos
+- organize(): Manejo específico de FileNotFoundError, PermissionError, OSError
+- organize(): exc_info=True en errores inesperados
+- _fetch_metadata(): logging INFO para cache hits, DEBUG para búsqueda, WARNING para sin resultados
+- _fetch_metadata(): logging INFO para TMDB match con detalles
+- _fetch_metadata(): exc_info=True en errores
+- _fetch_tv_episode_info(): logging DEBUG para info de episodios
+- _fetch_tv_episode_info(): logging WARNING/ERROR con exc_info
+- preview(): logging INFO/DEBUG/WARNING/ERROR con traceback en errores
+- preview(): Manejo específico de FileNotFoundError
+
+**Verificaciones:**
+- Ruff: All checks passed ?
+- Tests: 28/28 passing ?
+- Import: organizer.py funciona correctamente ?
