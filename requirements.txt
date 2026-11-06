@@ -5,7 +5,7 @@ requests>=2.31.0
 
 # Data handling
 tmdbv3api>=1.7.0
-imdbpy>=2023.9.15
+imdbpy>=2022.7.9
 
 # Configuration
 PyYAML>=6.0.1

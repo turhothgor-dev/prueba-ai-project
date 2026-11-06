@@ -2,7 +2,6 @@
 
 import re
 from pathlib import Path
-from typing import List
 
 
 def sanitize_filename(filename: str) -> str:
@@ -29,7 +28,7 @@ def sanitize_filename(filename: str) -> str:
     return sanitized
 
 
-def get_video_files(directory: str | Path, recursive: bool = True) -> List[Path]:
+def get_video_files(directory: str | Path, recursive: bool = True) -> list[Path]:
     """Get all video files from a directory.
 
     Args:

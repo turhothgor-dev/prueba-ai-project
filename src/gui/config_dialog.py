@@ -1,22 +1,19 @@
 """Configuration dialog window."""
 
 from PyQt6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QFormLayout,
-    QLineEdit,
     QCheckBox,
-    QSpinBox,
     QComboBox,
-    QPushButton,
+    QDialog,
     QFileDialog,
+    QFormLayout,
     QGroupBox,
-    QLabel,
+    QHBoxLayout,
+    QLineEdit,
     QMessageBox,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
 )
-from PyQt6.QtCore import Qt
-from typing import Optional
 
 
 class ConfigDialog(QDialog):
@@ -51,7 +48,7 @@ class ConfigDialog(QDialog):
         self.api_key_input = QLineEdit()
         self.api_key_input.setPlaceholderText("Opcional - Necesaria para buscar metadatos")
         self.api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
-        
+
         # Create layout for API key with toggle button
         api_key_layout = QHBoxLayout()
         self.api_key_toggle_btn = QPushButton("👁")
@@ -60,7 +57,7 @@ class ConfigDialog(QDialog):
         self._api_key_visible = False
         api_key_layout.addWidget(self.api_key_input)
         api_key_layout.addWidget(self.api_key_toggle_btn)
-        
+
         api_layout.addRow("TMDB API Key:", api_key_layout)
 
         self.language_combo = QComboBox()
@@ -140,7 +137,7 @@ class ConfigDialog(QDialog):
         # API
         self.api_key_input.setText(self.config.get("api.tmdb_api_key", ""))
         self.use_imdb_check.setChecked(self.config.get("api.use_imdb", False))
-        
+
         # Language
         saved_language = self.config.get("api.tmdb_language", "es-ES")
         for display_name, code in self.LANGUAGE_MAP.items():
@@ -179,48 +176,49 @@ class ConfigDialog(QDialog):
 
     def _on_browse_base_dir(self) -> None:
         """Open folder browser for base directory."""
-        directory = QFileDialog.getExistingDirectory(
-            self, "Seleccionar Directorio Base"
-        )
+        directory = QFileDialog.getExistingDirectory(self, "Seleccionar Directorio Base")
         if directory:
             self.base_dir_input.setText(directory)
 
     def _validate_inputs(self) -> tuple[bool, str]:
         """Validate user inputs before saving.
-        
+
         Returns:
             Tuple of (is_valid, warning_message)
             - is_valid: True if configuration can be saved
             - warning_message: Warning message if API key is missing/invalid
         """
         api_key = self.api_key_input.text().strip()
-        
+
         # API key is optional, but warn if invalid format when provided
         if api_key and len(api_key) < 10:
             return True, "La API key de TMDB parece muy corta. Verifica que sea correcta."
-        
+
         # Warn if no API key provided
         if not api_key:
-            return True, "No se proporcionó API key. La búsqueda automática de metadatos no estará disponible."
-        
+            return (
+                True,
+                "No se proporcionó API key. La búsqueda automática de metadatos no estará disponible.",
+            )
+
         return True, ""
 
     def _on_save(self) -> None:
         """Save configuration values."""
         # Validate inputs (non-blocking)
         is_valid, warning_msg = self._validate_inputs()
-        
+
         # Always save configuration regardless of warnings
         try:
             # API
             self.config.set("api.tmdb_api_key", self.api_key_input.text().strip())
             self.config.set("api.use_imdb", self.use_imdb_check.isChecked())
-            
+
             # Language
             selected_language = self.language_combo.currentText()
             language_code = self.LANGUAGE_MAP.get(selected_language, "es-ES")
             self.config.set("api.tmdb_language", language_code)
-            
+
             # Organization
             self.config.set("organization.base_directory", self.base_dir_input.text())
             self.config.set("organization.folder_pattern", self.folder_pattern_input.text())
@@ -231,18 +229,18 @@ class ConfigDialog(QDialog):
             self.config.set(
                 "organization.replace_existing", self.replace_existing_check.isChecked()
             )
-            
+
             # Cache
             self.config.set("cache.enabled", self.cache_enabled_check.isChecked())
             self.config.set("cache.ttl_days", self.cache_ttl_spin.value())
-            
+
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo guardar la configuración: {str(e)}")
             return
-        
+
         # Show appropriate message
         if warning_msg:
-            result = QMessageBox.warning(
+            QMessageBox.warning(
                 self,
                 "Advertencia",
                 f"{warning_msg}\n\nLa configuración se ha guardado correctamente.",
@@ -250,9 +248,9 @@ class ConfigDialog(QDialog):
             )
         else:
             QMessageBox.information(self, "Configuración", "Configuración guardada correctamente.")
-        
+
         # Refresh services in main window if API key changed
         if self.parent() and hasattr(self.parent(), "_create_services"):
             self.parent()._create_services()
-        
+
         self.accept()

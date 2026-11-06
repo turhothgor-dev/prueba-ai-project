@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Tuple
 
 from src.core.config import Config
 from src.core.media_file import MediaFile
@@ -33,18 +32,14 @@ class FileOrganizer:
         self.cache = cache_service
         self.tmdb = tmdb_service
         self.base_directory = Path(config.get("organization.base_directory", ""))
-        self.folder_pattern = config.get(
-            "organization.folder_pattern", "{title} ({year})"
-        )
+        self.folder_pattern = config.get("organization.folder_pattern", "{title} ({year})")
         self.file_pattern = config.get(
             "organization.file_pattern", "{title} - S{season:02d}E{episode:02d}"
         )
-        self.create_season_folders = config.get(
-            "organization.create_season_folders", True
-        )
+        self.create_season_folders = config.get("organization.create_season_folders", True)
         self.replace_existing = config.get("organization.replace_existing", False)
 
-    def organize(self, media_file: MediaFile) -> Tuple[bool, str]:
+    def organize(self, media_file: MediaFile) -> tuple[bool, str]:
         """Organize a single media file.
 
         This method will:
@@ -139,7 +134,8 @@ class FileOrganizer:
 
             # Cache the result (filter non-serializable attributes)
             cache_data = {
-                k: v for k, v in best_match.__dict__.items()
+                k: v
+                for k, v in best_match.__dict__.items()
                 if isinstance(v, (str, int, float, bool, type(None)))
             }
             self.cache.set(cache_key, cache_data)
@@ -174,9 +170,7 @@ class FileOrganizer:
                 # Update title with episode title if available
                 episode_title = episode_details.get("name")
                 if episode_title:
-                    media_file.title = (
-                        f"{media_file.title} - {episode_title}"
-                    )
+                    media_file.title = f"{media_file.title} - {episode_title}"
         except Exception as e:
             logger.warning(f"Error fetching episode details: {e}")
 
@@ -212,9 +206,7 @@ class FileOrganizer:
         if media_file.is_series and self.create_season_folders:
             # TV show structure: Base/Show Name/Season X/
             season_num = media_file.season or 1
-            dir_pattern = (
-                f"{self.folder_pattern}/Season {season_num}"
-            )
+            dir_pattern = f"{self.folder_pattern}/Season {season_num}"
             dir_name = dir_pattern.format(
                 title=media_file.title or "Unknown",
                 year=media_file.year or "Unknown",
@@ -272,7 +264,7 @@ class FileOrganizer:
                 return (
                     False,
                     new_filename,
-                    f"Conflicto: el archivo ya existe en destino",
+                    "Conflicto: el archivo ya existe en destino",
                 )
 
             # Step 4: Check source file exists

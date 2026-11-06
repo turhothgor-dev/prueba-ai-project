@@ -1,8 +1,7 @@
 """Tests for Config class."""
 
-import pytest
 import json
-from pathlib import Path
+
 from src.core.config import Config
 
 

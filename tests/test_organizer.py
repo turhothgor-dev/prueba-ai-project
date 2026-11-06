@@ -1,14 +1,14 @@
 """Tests for FileOrganizer class."""
 
-import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from src.core.media_file import MediaFile
+import pytest
+
 from src.core.config import Config
+from src.core.media_file import MediaFile
+from src.core.organizer import FileOrganizer
 from src.services.cache_service import CacheService
 from src.services.tmdb_service import TMDBService
-from src.core.organizer import FileOrganizer
 
 
 class TestFileOrganizer:
@@ -331,7 +331,6 @@ class TestFileOrganizer:
 
         assert success is True
 
-
     # === Tests para Preview ===
 
     def test_preview_movie(self, config, mock_tmdb_service, cache_service, temp_dir):
@@ -438,7 +437,7 @@ class TestFileOrganizer:
         """Test preview when destination file already exists."""
         temp_dir = tmp_path / "media"
         temp_dir.mkdir(parents=True, exist_ok=True)
-        
+
         config_file = temp_dir / "config.json"
         config_dir = temp_dir / "config"
         config_dir.mkdir(parents=True, exist_ok=True)
@@ -448,7 +447,7 @@ class TestFileOrganizer:
         config.set("organization.file_pattern", "{title} ({year})")
         config.set("organization.folder_pattern", "{title} ({year})")
         config.set("organization.create_season_folders", False)
-        
+
         organizer = FileOrganizer(
             config=config,
             cache_service=CacheService(db_path=temp_dir / "cache.db"),

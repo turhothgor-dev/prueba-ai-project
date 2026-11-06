@@ -1,10 +1,8 @@
 """MediaOrganizer - Main application entry point."""
 
 import sys
-from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QLocale
 
 from src.core.config import Config
 from src.gui.main_window import MainWindow

@@ -1,28 +1,29 @@
 """Main application window."""
 
+from pathlib import Path
+
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
+    QFileDialog,
     QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QProgressBar,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
-    QProgressBar,
-    QLabel,
-    QFileDialog,
-    QMessageBox,
-    QHeaderView,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from pathlib import Path
-from typing import Optional
 
-from .config_dialog import ConfigDialog
 from src.core.media_file import MediaFile
 from src.core.organizer import FileOrganizer
 from src.services.cache_service import CacheService
 from src.services.tmdb_service import TMDBService
+
+from .config_dialog import ConfigDialog
 
 
 class WorkerThread(QThread):
@@ -44,7 +45,7 @@ class WorkerThread(QThread):
         self.config = config
         self.tmdb_service = tmdb_service
         self.cache_service = cache_service
-        self.organizer: Optional[FileOrganizer] = None
+        self.organizer: FileOrganizer | None = None
         self.processed_count = 0
         self.failed_count = 0
 
@@ -65,8 +66,7 @@ class WorkerThread(QThread):
             for i, media_file in enumerate(self.media_files):
                 # Update status
                 self.status.emit(
-                    f"Procesando: {media_file.original_filename} "
-                    f"({i + 1}/{total})"
+                    f"Procesando: {media_file.original_filename} " f"({i + 1}/{total})"
                 )
 
                 # Process the file
@@ -98,10 +98,10 @@ class MainWindow(QMainWindow):
     def __init__(self, config) -> None:
         super().__init__()
         self.config = config
-        self.worker: Optional[WorkerThread] = None
+        self.worker: WorkerThread | None = None
         self.media_files: list[MediaFile] = []
-        self.tmdb_service: Optional[TMDBService] = None
-        self.cache_service: Optional[CacheService] = None
+        self.tmdb_service: TMDBService | None = None
+        self.cache_service: CacheService | None = None
         self._init_ui()
         self._init_services()
 
@@ -178,14 +178,12 @@ class MainWindow(QMainWindow):
         # File table
         self.table_files = QTableWidget()
         self.table_files.setColumnCount(6)
-        self.table_files.setHorizontalHeaderLabels([
-            "Archivo", "Título", "Temp.", "Epis.", "Nuevo Nombre", "Estado"
-        ])
-        self.table_files.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
+        self.table_files.setHorizontalHeaderLabels(
+            ["Archivo", "Título", "Temp.", "Epis.", "Nuevo Nombre", "Estado"]
         )
+        self.table_files.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table_files.setColumnWidth(4, 250)
-        
+
         # Enable row selection
         self.table_files.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table_files.setSelectionMode(QTableWidget.SelectionMode.ExtendedSelection)
@@ -216,14 +214,11 @@ class MainWindow(QMainWindow):
 
     def _on_add_folder(self) -> None:
         """Handle add folder button click."""
-        folder = QFileDialog.getExistingDirectory(
-            self, "Seleccionar Carpeta"
-        )
+        folder = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta")
         if folder:
             video_extensions = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv"}
             files = [
-                str(f) for f in Path(folder).rglob("*")
-                if f.suffix.lower() in video_extensions
+                str(f) for f in Path(folder).rglob("*") if f.suffix.lower() in video_extensions
             ]
             self._add_files_to_table(files)
 
@@ -279,11 +274,13 @@ class MainWindow(QMainWindow):
 
     def _on_remove_selected(self) -> None:
         """Remove selected files from the list."""
-        selected_rows = sorted(set(item.row() for item in self.table_files.selectedItems()), reverse=True)
-        
+        selected_rows = sorted(
+            set(item.row() for item in self.table_files.selectedItems()), reverse=True
+        )
+
         if not selected_rows:
             return
-        
+
         # Confirm deletion
         count = len(selected_rows)
         result = QMessageBox.question(
@@ -293,17 +290,17 @@ class MainWindow(QMainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
-        
+
         if result == QMessageBox.StandardButton.Yes:
             # Remove from media_files list (in reverse order to maintain indices)
             for row in selected_rows:
                 if row < len(self.media_files):
                     self.media_files.pop(row)
-            
+
             # Remove table rows (in reverse order)
             for row in selected_rows:
                 self.table_files.removeRow(row)
-            
+
             # Reset buttons if no files left
             if not self.media_files:
                 self.btn_process.setEnabled(False)
@@ -317,7 +314,7 @@ class MainWindow(QMainWindow):
         """Open TMDB API log file in system default application."""
         log_dir = Path.home() / ".mediaorganizer" / "logs"
         log_file = log_dir / "tmdb_api.log"
-        
+
         if not log_file.exists():
             QMessageBox.information(
                 self,
@@ -325,11 +322,11 @@ class MainWindow(QMainWindow):
                 "No hay logs disponibles.\n\nLos logs se generarán cuando hagas una vista previa.",
             )
             return
-        
+
         # Open file with system default application
         import subprocess
         import sys
-        
+
         try:
             if sys.platform == "darwin":  # macOS
                 subprocess.call(["open", str(log_file)])
@@ -337,7 +334,7 @@ class MainWindow(QMainWindow):
                 subprocess.call(["start", str(log_file)], shell=True)
             else:  # Linux
                 subprocess.call(["xdg-open", str(log_file)])
-            
+
             QMessageBox.information(
                 self,
                 "Logs TMDB",
@@ -358,9 +355,7 @@ class MainWindow(QMainWindow):
     def _on_preview(self) -> None:
         """Handle preview button click."""
         if not self.media_files:
-            QMessageBox.warning(
-                self, "Advertencia", "No hay archivos para previsualizar."
-            )
+            QMessageBox.warning(self, "Advertencia", "No hay archivos para previsualizar.")
             return
 
         if not self.tmdb_service:
@@ -390,9 +385,7 @@ class MainWindow(QMainWindow):
 
         for i, media_file in enumerate(self.media_files):
             # Update status
-            self.status_label.setText(
-                f"Preview {i + 1}/{total}: {media_file.original_filename}"
-            )
+            self.status_label.setText(f"Preview {i + 1}/{total}: {media_file.original_filename}")
 
             # Run preview
             success, new_filename, new_path = organizer.preview(media_file)
@@ -459,9 +452,7 @@ class MainWindow(QMainWindow):
     def _on_process(self) -> None:
         """Handle process button click."""
         if not self.media_files:
-            QMessageBox.warning(
-                self, "Advertencia", "No hay archivos para procesar."
-            )
+            QMessageBox.warning(self, "Advertencia", "No hay archivos para procesar.")
             return
 
         if not self.tmdb_service:
@@ -488,9 +479,7 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self._on_processing_finished)
         self.worker.start()
 
-    def _on_processing_finished(
-        self, success: bool, processed: int, failed: int
-    ) -> None:
+    def _on_processing_finished(self, success: bool, processed: int, failed: int) -> None:
         """Handle processing completion."""
         self.progress_bar.setVisible(False)
         self.btn_process.setEnabled(True)
@@ -529,5 +518,3 @@ class MainWindow(QMainWindow):
             self.worker.terminate()
             self.worker.wait()
         event.accept()
-
-

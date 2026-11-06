@@ -1,10 +1,9 @@
 """Validation utilities."""
 
 import re
-from typing import Optional, Tuple
 
 
-def validate_api_key(api_key: str) -> Tuple[bool, str]:
+def validate_api_key(api_key: str) -> tuple[bool, str]:
     """Validate TMDB API key format.
 
     Args:
@@ -26,7 +25,7 @@ def validate_api_key(api_key: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def validate_directory(path: str) -> Tuple[bool, str]:
+def validate_directory(path: str) -> tuple[bool, str]:
     """Validate directory path.
 
     Args:
@@ -54,7 +53,7 @@ def validate_directory(path: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def validate_pattern(pattern: str) -> Tuple[bool, str]:
+def validate_pattern(pattern: str) -> tuple[bool, str]:
     """Validate filename/folder pattern syntax.
 
     Args:

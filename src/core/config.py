@@ -1,9 +1,8 @@
 """Configuration management module."""
 
 import json
-import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 class Config:
@@ -34,7 +33,7 @@ class Config:
         },
     }
 
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Path | None = None):
         """Initialize configuration.
 
         Args:
@@ -52,7 +51,7 @@ class Config:
     def _load_config(self) -> dict[str, Any]:
         """Load configuration from file or create default."""
         if self._config_path.exists():
-            with open(self._config_path, "r", encoding="utf-8") as f:
+            with open(self._config_path, encoding="utf-8") as f:
                 return json.load(f)
         else:
             self._save_config(self.DEFAULT_CONFIG)

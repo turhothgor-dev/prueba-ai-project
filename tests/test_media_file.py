@@ -1,7 +1,5 @@
 """Tests for MediaFile class."""
 
-import pytest
-from pathlib import Path
 from src.core.media_file import MediaFile
 
 

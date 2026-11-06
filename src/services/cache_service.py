@@ -1,10 +1,10 @@
 """Cache service for storing API responses locally."""
 
-import sqlite3
 import json
+import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 class CacheService:
@@ -17,7 +17,7 @@ class CacheService:
             db_path: Path to SQLite database file
         """
         self.db_path = Path(db_path)
-        self._conn: Optional[sqlite3.Connection] = None
+        self._conn: sqlite3.Connection | None = None
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
@@ -52,7 +52,7 @@ class CacheService:
 
         conn.commit()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get cached value by key.
 
         Args:

@@ -1,9 +1,8 @@
 """Media file data model and operations."""
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -13,12 +12,12 @@ class MediaFile:
     path: Path
     original_filename: str
     extension: str = ""
-    title: Optional[str] = None
-    year: Optional[int] = None
-    season: Optional[int] = None
-    episode: Optional[int] = None
-    tmdb_id: Optional[int] = None
-    imdb_id: Optional[str] = None
+    title: str | None = None
+    year: int | None = None
+    season: int | None = None
+    episode: int | None = None
+    tmdb_id: int | None = None
+    imdb_id: str | None = None
     is_series: bool = False
     metadata_fetched: bool = False
 
