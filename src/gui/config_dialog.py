@@ -1,7 +1,6 @@
 """Configuration dialog window."""
 
-import logging
-
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -15,6 +14,8 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
 )
 
@@ -26,6 +27,99 @@ from src.utils.validators import (
 )
 
 logger = get_logger(__name__)
+
+
+class PatternHelpDialog(QDialog):
+    """Dialog showing pattern placeholder help and examples."""
+
+    PLACEHOLDERS_INFO = [
+        ("{title}", "Título de la película/serie"),
+        ("{year}", "Año de lanzamiento"),
+        ("{season}", "Número de temporada (solo series)"),
+        ("{episode}", "Número de episodio (solo series)"),
+        ("{tmdb_id}", "ID de TMDB"),
+        ("{imdb_id}", "ID de IMDb"),
+        ("{original_title}", "Título original"),
+    ]
+
+    FOLDER_EXAMPLES = [
+        ("Película", "{title} ({year})"),
+        ("Serie (estructura básica)", "{title} ({year})"),
+        ("Serie (con temporadas)", "{title} ({year})/Season {season}"),
+    ]
+
+    FILE_EXAMPLES = [
+        ("Película", "{title} - ({year}) - [tmdbid-{tmdb_id}]"),
+        ("Serie (sin temporada)", "{title} - S{season:02d}E{episode:02d}"),
+        ("Serie (con título)", "{title} - S{season:02d}E{episode:02d} - {original_title}"),
+    ]
+
+    def __init__(self, pattern_type: str, parent=None) -> None:
+        super().__init__(parent)
+        self.pattern_type = pattern_type
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """Initialize the help dialog UI."""
+        self.setWindowTitle(f"Ayuda de Patrones - {self.pattern_type.title()}")
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(400)
+
+        layout = QVBoxLayout(self)
+
+        # Title
+        title_label = QLabel("Placeholders Disponibles")
+        title_label.setStyleSheet("font-size: 12pt; font-weight: bold;")
+        layout.addWidget(title_label)
+
+        # Placeholders table
+        placeholders_table = self._create_placeholders_table()
+        layout.addWidget(placeholders_table)
+
+        # Examples
+        examples_label = QLabel("Ejemplos de Patrones")
+        examples_label.setStyleSheet("font-size: 12pt; font-weight: bold; margin-top: 10px;")
+        layout.addWidget(examples_label)
+
+        examples_text = self._get_examples_text()
+        examples_label_widget = QLabel(examples_text)
+        examples_label_widget.setWordWrap(True)
+        examples_label_widget.setStyleSheet(
+            "font-family: monospace; background-color: #f5f5f5; padding: 8px; border-radius: 4px;"
+        )
+        layout.addWidget(examples_label_widget)
+
+        # Close button
+        btn_close = QPushButton("Cerrar")
+        btn_close.clicked.connect(self.accept)
+        layout.addWidget(btn_close)
+
+    def _create_placeholders_table(self) -> QTableWidget:
+        """Create a table showing all available placeholders."""
+        table = QTableWidget(len(self.PLACEHOLDERS_INFO), 2)
+        table.setHorizontalHeaderLabels(["Placeholder", "Descripción"])
+        table.horizontalHeader().setSectionResizeMode(0, QTableWidget.ResizeMode.Stretch)
+        table.horizontalHeader().setSectionResizeMode(1, QTableWidget.ResizeMode.Stretch)
+        table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+
+        for i, (placeholder, description) in enumerate(self.PLACEHOLDERS_INFO):
+            placeholder_item = QTableWidgetItem(placeholder)
+            placeholder_item.setFont(QFont("Consolas", 10))
+            table.setItem(i, 0, placeholder_item)
+            table.setItem(i, 1, QTableWidgetItem(description))
+
+        return table
+
+    def _get_examples_text(self) -> str:
+        """Get formatted examples text based on pattern type."""
+        if self.pattern_type == "folder":
+            examples = self.FOLDER_EXAMPLES
+        else:
+            examples = self.FILE_EXAMPLES
+
+        lines = [f"{name}: {example}" for name, example in examples]
+        return "\n\n".join(lines)
 
 
 class ConfigDialog(QDialog):
@@ -105,7 +199,14 @@ class ConfigDialog(QDialog):
         self.folder_pattern_input.setToolTip(
             "Ej: {title} ({year}) para películas\nEj: {title}/Season {season} para series"
         )
-        org_layout.addRow("Patrón de Carpeta:", self.folder_pattern_input)
+        folder_pattern_layout = QHBoxLayout()
+        folder_pattern_layout.addWidget(self.folder_pattern_input)
+        folder_pattern_help_btn = QPushButton("?")
+        folder_pattern_help_btn.setFixedSize(24, 24)
+        folder_pattern_help_btn.setToolTip("Ayuda para este patrón")
+        folder_pattern_help_btn.clicked.connect(lambda: self._show_pattern_help("folder"))
+        folder_pattern_layout.addWidget(folder_pattern_help_btn)
+        org_layout.addRow("Patrón de Carpeta:", folder_pattern_layout)
 
         self.folder_pattern_label = QLabel("")
         self.folder_pattern_label.setStyleSheet("color: red; font-size: 10pt;")
@@ -116,7 +217,14 @@ class ConfigDialog(QDialog):
         self.file_pattern_input.setToolTip(
             "Ej: {title} - ({year}) para películas\nEj: {title} - S{season:02d}E{episode:02d} para series"
         )
-        org_layout.addRow("Patrón de Archivo:", self.file_pattern_input)
+        file_pattern_layout = QHBoxLayout()
+        file_pattern_layout.addWidget(self.file_pattern_input)
+        file_pattern_help_btn = QPushButton("?")
+        file_pattern_help_btn.setFixedSize(24, 24)
+        file_pattern_help_btn.setToolTip("Ayuda para este patrón")
+        file_pattern_help_btn.clicked.connect(lambda: self._show_pattern_help("file"))
+        file_pattern_layout.addWidget(file_pattern_help_btn)
+        org_layout.addRow("Patrón de Archivo:", file_pattern_layout)
 
         self.file_pattern_label = QLabel("")
         self.file_pattern_label.setStyleSheet("color: red; font-size: 10pt;")
@@ -285,6 +393,15 @@ class ConfigDialog(QDialog):
             self.btn_save.setStyleSheet("QPushButton { color: red; font-weight: bold; }")
         else:
             self.btn_save.setStyleSheet("")
+
+    def _show_pattern_help(self, pattern_type: str) -> None:
+        """Show contextual help for pattern placeholders.
+
+        Args:
+            pattern_type: Either 'folder' or 'file'
+        """
+        dialog = PatternHelpDialog(pattern_type, self)
+        dialog.exec()
 
     def _on_browse_base_dir(self) -> None:
         """Open folder browser for base directory."""
