@@ -40,3 +40,11 @@
 Para el estado actual, tareas completadas y plan de desarrollo, consultar:
 
 📄 **[.ai-project/ROADMAP.md](.ai-project/ROADMAP.md)**
+
+## 5. AI Guidelines
+
+Dentro .ai-project/docs están los documentos de directrices para la IA:
+
+- **[.ai-project\docs\AI_FILE_OPERATIONS.md](.ai-project\docs\AI_FILE_OPERATIONS.md)** Directrices de menjo de archivos.
+- **[.ai-project\docs\AI_SHELL_GUIDELINES.md](.ai-project\docs\AI_SHELL_GUIDELINES.md)** Directrices de manejo de comandos del sistema.
+- **[.ai-project\docs\VERIFICATION_SUITE.md](.ai-project\docs\VERIFICATION_SUITE.md)** Directrices de verificación.
