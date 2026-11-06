@@ -55,12 +55,9 @@ MediaOrganizer/
 
 ## Próximos Pasos
 
-1. [ ] Obtener TMDB API Key y configurar
-2. [ ] Ejecutar tests: `pytest`
-3. [ ] Probar la aplicación: `python -m src.main`
-4. [ ] Implementar lógica de procesamiento de archivos
-5. [ ] Añadir más tests de integración
-6. [ ] Configurar PyInstaller para builds
+Para el estado actual, tareas completadas y plan de desarrollo, consultar:
+
+📄 **[.ai-project/ROADMAP.md](.ai-project/ROADMAP.md)**
 
 ---
 

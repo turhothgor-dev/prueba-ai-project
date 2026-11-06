@@ -124,6 +124,16 @@ Season y Episode solo tendrá sentido en series, no en películas.
 - **Películas**: `{title} - ({year}) - [tmdbid-{tmdb_id}]`
 - **Series**: `{title}/Season {season}/{title} - S{season:02d}E{episode:02d} - [tmdbid-{tmdb_id}]`
 
+## Estado del desarrollo
+
+Para el estado actual, tareas completadas y plan de desarrollo, consultar:
+📄 **[.ai-project/ROADMAP.md](.ai-project/ROADMAP.md)**
+
+## AI Project Context
+
+Directrices para los modelos de IA, consultar:
+📄 **[.ai-project/PROJECT_CONTEXT.md](.ai-project/PROJECT_CONTEXT.md)**
+
 ## 🤝 Contribuir[tmdbid-{tmdb_id}][tmdbid-{[tmdbid-{tmdb_id}]tmdb_id}]
 
 1. Fork el repositorio
