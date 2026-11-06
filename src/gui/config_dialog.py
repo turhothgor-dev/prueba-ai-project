@@ -8,11 +8,17 @@ from PyQt6.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
+)
+
+from src.utils.validators import (
+    validate_base_directory,
+    validate_pattern_syntax,
 )
 
 
@@ -31,6 +37,7 @@ class ConfigDialog(QDialog):
     def __init__(self, config, parent=None) -> None:
         super().__init__(parent)
         self.config = config
+        self._errors: dict[str, str] = {}
         self._init_ui()
         self._load_config()
 
@@ -83,13 +90,31 @@ class ConfigDialog(QDialog):
         base_dir_layout.addWidget(browse_btn)
         org_layout.addRow("Directorio Base:", base_dir_layout)
 
+        self.base_dir_label = QLabel("")
+        self.base_dir_label.setStyleSheet("color: red; font-size: 10pt;")
+        org_layout.addRow("", self.base_dir_label)
+
         self.folder_pattern_input = QLineEdit()
         self.folder_pattern_input.setText("{title} ({year})")
+        self.folder_pattern_input.setToolTip(
+            "Ej: {title} ({year}) para películas\nEj: {title}/Season {season} para series"
+        )
         org_layout.addRow("Patrón de Carpeta:", self.folder_pattern_input)
+
+        self.folder_pattern_label = QLabel("")
+        self.folder_pattern_label.setStyleSheet("color: red; font-size: 10pt;")
+        org_layout.addRow("", self.folder_pattern_label)
 
         self.file_pattern_input = QLineEdit()
         self.file_pattern_input.setText("{title} - S{season:02d}E{episode:02d}")
+        self.file_pattern_input.setToolTip(
+            "Ej: {title} - ({year}) para películas\nEj: {title} - S{season:02d}E{episode:02d} para series"
+        )
         org_layout.addRow("Patrón de Archivo:", self.file_pattern_input)
+
+        self.file_pattern_label = QLabel("")
+        self.file_pattern_label.setStyleSheet("color: red; font-size: 10pt;")
+        org_layout.addRow("", self.file_pattern_label)
 
         self.season_folders_check = QCheckBox("Crear carpetas por temporada")
         self.season_folders_check.setChecked(True)
@@ -132,6 +157,11 @@ class ConfigDialog(QDialog):
 
         layout.addLayout(button_layout)
 
+        # Connect real-time validation
+        self.folder_pattern_input.textChanged.connect(self._validate_folder_pattern)
+        self.file_pattern_input.textChanged.connect(self._validate_file_pattern)
+        self.base_dir_input.textChanged.connect(self._validate_base_dir)
+
     def _load_config(self) -> None:
         """Load current config values into UI."""
         # API
@@ -173,6 +203,82 @@ class ConfigDialog(QDialog):
         else:
             self.api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
             self.api_key_toggle_btn.setText("👁")
+
+    # ---- Real-time validation methods ----
+
+    def _validate_folder_pattern(self, _text: str = "") -> None:
+        """Validate folder pattern in real-time."""
+        text = self.folder_pattern_input.text()
+        is_valid, error, warnings = validate_pattern_syntax(text)
+
+        if not is_valid:
+            self.folder_pattern_label.setText(f"⚠ {error}")
+            self.folder_pattern_label.setStyleSheet("color: red; font-size: 10pt; font-weight: bold;")
+            self._errors["folder_pattern"] = error
+        elif warnings:
+            warning_msg = " | ".join(warnings)
+            self.folder_pattern_label.setText(f"💡 {warning_msg}")
+            self.folder_pattern_label.setStyleSheet("color: orange; font-size: 10pt;")
+            self._errors.pop("folder_pattern", None)
+        else:
+            self.folder_pattern_label.setText("✅ Patrón válido")
+            self.folder_pattern_label.setStyleSheet("color: green; font-size: 10pt;")
+            self._errors.pop("folder_pattern", None)
+
+        self._update_save_button_state()
+
+    def _validate_file_pattern(self, _text: str = "") -> None:
+        """Validate file pattern in real-time."""
+        text = self.file_pattern_input.text()
+        is_valid, error, warnings = validate_pattern_syntax(text)
+
+        if not is_valid:
+            self.file_pattern_label.setText(f"⚠ {error}")
+            self.file_pattern_label.setStyleSheet("color: red; font-size: 10pt; font-weight: bold;")
+            self._errors["file_pattern"] = error
+        elif warnings:
+            warning_msg = " | ".join(warnings)
+            self.file_pattern_label.setText(f"💡 {warning_msg}")
+            self.file_pattern_label.setStyleSheet("color: orange; font-size: 10pt;")
+            self._errors.pop("file_pattern", None)
+        else:
+            self.file_pattern_label.setText("✅ Patrón válido")
+            self.file_pattern_label.setStyleSheet("color: green; font-size: 10pt;")
+            self._errors.pop("file_pattern", None)
+
+        self._update_save_button_state()
+
+    def _validate_base_dir(self, _text: str = "") -> None:
+        """Validate base directory in real-time."""
+        text = self.base_dir_input.text()
+
+        if not text:
+            self.base_dir_label.setText("")
+            self._errors.pop("base_directory", None)
+            self._update_save_button_state()
+            return
+
+        is_valid, error = validate_base_directory(text, must_exist=True)
+
+        if not is_valid:
+            self.base_dir_label.setText(f"⚠ {error}")
+            self.base_dir_label.setStyleSheet("color: red; font-size: 10pt; font-weight: bold;")
+            self._errors["base_directory"] = error
+        else:
+            self.base_dir_label.setText("✅ Directorio válido")
+            self.base_dir_label.setStyleSheet("color: green; font-size: 10pt;")
+            self._errors.pop("base_directory", None)
+
+        self._update_save_button_state()
+
+    def _update_save_button_state(self) -> None:
+        """Enable/disable save button based on validation errors."""
+        has_errors = bool(self._errors)
+        self.btn_save.setEnabled(not has_errors)
+        if has_errors:
+            self.btn_save.setStyleSheet("QPushButton { color: red; font-weight: bold; }")
+        else:
+            self.btn_save.setStyleSheet("")
 
     def _on_browse_base_dir(self) -> None:
         """Open folder browser for base directory."""
