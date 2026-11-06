@@ -106,3 +106,18 @@
 - Ruff: All checks passed ?
 - Tests: 28/28 passing ?
 - Import: organizer.py funciona correctamente ?
+
+
+## Fase 2, Paso 2.1 - Extender validators.py - 06/11/2026 15:00:00
+
+**Archivo modificado:** src/utils/validators.py
+
+**Nuevas funciones:**
+- validate_pattern_placeholders(pattern, media_type): Valida placeholders requeridos según tipo de medio (series requieren {season} y {episode})
+- validate_pattern_syntax(pattern): Validación detallada con warnings (especificadores de formato, placeholders recomendados)
+- validate_base_directory(path, must_exist): Validación mejorada de directorios con chequeo de permisos
+
+**Verificaciones:**
+- Ruff: All checks passed ?
+- Tests: 28/28 passing ?
+- Funciones probadas manualmente: todas correctas ?
