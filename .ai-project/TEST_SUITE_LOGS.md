@@ -23,3 +23,19 @@
 
 ### Estado:
 ? Proyecto listo para desarrollo en Windows
+
+
+## Fase 1, Paso 1.1 - Crear logger centralizado - 06/11/2026 13:39:00
+
+**Archivo creado:** src/utils/logger.py
+
+**Funcionalidades implementadas:**
+- setup_logging() con RotatingFileHandler (5MB, 3 backups)
+- Console handler (INFO level)
+- File handler (DEBUG level)
+- get_logger() para namespace 'mediaorganizer'
+- LoggingMixin class
+
+**Tests:** 28/28 passing ?
+**Ruff:** All checks passed ?
+**Verificación:** Logger funciona correctamente (console + file)
