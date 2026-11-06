@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QApplication
 
 from src.core.config import Config
 from src.gui.main_window import MainWindow
+from src.utils.logger import setup_logging
 
 
 def main() -> int:
@@ -16,6 +17,9 @@ def main() -> int:
     """
     # Initialize configuration
     config = Config()
+
+    # Set up centralized logging
+    setup_logging()
 
     # Create application
     app = QApplication(sys.argv)

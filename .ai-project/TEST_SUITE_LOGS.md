@@ -39,3 +39,21 @@
 **Tests:** 28/28 passing ?
 **Ruff:** All checks passed ?
 **Verificación:** Logger funciona correctamente (console + file)
+
+
+## Fase 1, Paso 1.1 - COMPLETADO (corrección) - 06/11/2026 13:45:00
+
+**Archivo modificado:** src/main.py
+- Import setup_logging desde src.utils.logger
+- Llamada a setup_logging() al inicio de main(), después de Config()
+
+**Archivos del paso 1.1:**
+- src/utils/logger.py (NUEVO) - Logging centralizado
+- src/main.py (MODIFICADO) - Inicialización del logging
+
+**Verificaciones:**
+- Ruff: All checks passed ?
+- Tests: 28/28 passing ?
+- Import: src.main funciona correctamente ?
+
+**Paso 1.1 ahora COMPLETO al 100%**
