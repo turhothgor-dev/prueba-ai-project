@@ -1,6 +1,6 @@
-# 🗺️ Roadmap - MediaOrganizer
+﻿# 🗺️ Roadmap - MediaOrganizer
 
-> **Última actualización:** 30/10/2026
+> **Última actualización:** 06/11/2026
 
 ---
 
@@ -8,10 +8,10 @@
 
 | Métrica | Valor |
 | --------- | ------- |
-| **Versión** | 0.1.0 |
+| **Versión** | 0.2.0 |
 | **Tests Unitarios** | 28/28 passing ✅ |
 | **Módulos Core** | 100% implementados |
-| **GUI** | Funcional con vista previa |
+| **GUI** | Funcional con validación en tiempo real y ayuda contextual |
 | **Estado General** | Alpha - En Desarrollo Activo |
 
 ---
@@ -43,8 +43,6 @@
 - [x] Tests del organizador (12/12 passing)
 - [x] Actualización de GUI con progreso en tiempo real
 
----
-
 ### Fase 3: Mejoras de UX y Debugging (30/10/2026)
 
 - [x] **API key opcional** (no bloquea guardado de configuración)
@@ -57,6 +55,35 @@
 - [x] **Botón "Logs TMDB"** para abrir logs rápidamente
 - [x] Tests: 28/28 passing
 
+### Fase 4: Logging Centralizado (06/11/2026)
+
+- [x] **Módulo de logging centralizado** (`src/utils/logger.py`)
+- [x] **Logging con rotación** (5MB, 3 backups)
+- [x] **Console handler** (INFO) + **File handler** (DEBUG)
+- [x] **Logging mejorado en TMDB Service** (niveles apropiados, timing, excepciones)
+- [x] **Logging mejorado en FileOrganizer** (detalle por paso, manejo específico de errores)
+- [x] **Inicialización en main.py**
+
+### Fase 5: Validación de Patrones en GUI (06/11/2026)
+
+- [x] **Nuevas funciones en validators.py**
+  - [x] `validate_pattern_placeholders()` - Valida placeholders requeridos
+  - [x] `validate_pattern_syntax()` - Validación detallada con warnings
+  - [x] `validate_base_directory()` - Validación de directorios con permisos
+- [x] **Validación en tiempo real en ConfigDialog**
+  - [x] Labels con feedback visual (rojo/verde/naranja)
+  - [x] Conexión de signals `textChanged`
+  - [x] Botón guardar habilitado/deshabilitado según errores
+- [x] **Validación mejorada al guardar**
+  - [x] Acumulación de todos los errores (no solo el primero)
+  - [x] Diálogo de errores críticos bloquea guardado
+  - [x] Diálogo de warnings permite guardar
+  - [x] Logging de configuración guardada
+- [x] **Ayuda contextual**
+  - [x] Tooltips con ejemplos en inputs
+  - [x] Botones "?" abren dialog de ayuda
+  - [x] `PatternHelpDialog` con tabla de placeholders y ejemplos
+
 ---
 
 ## 🚧 En Progreso
@@ -66,8 +93,8 @@
 - [x] **API key de TMDB opcional (no bloquea configuración)**
 - [x] **Configuración siempre se guarda (sin pérdida de datos)**
 - [x] **Vista previa de cambios antes de aplicar**
-- [ ] Manejo de errores y logging mejorado
-- [ ] Validación de patrones en la GUI
+- [x] **Manejo de errores y logging mejorado** ✅ COMPLETADO
+- [x] **Validación de patrones en la GUI** ✅ COMPLETADO
 
 ---
 
@@ -75,6 +102,10 @@
 
 ### Funcionalidades Futuras
 
+- [ ] **Fase 6: Manejo de Errores con Excepciones Personalizadas**
+  - [ ] Crear `src/core/exceptions.py` con excepciones del dominio
+  - [ ] Refactorizar FileOrganizer para usar excepciones
+  - [ ] Mejorar WorkerThread con manejo específico de excepciones
 - [ ] Tests de integración
 - [ ] Soporte para IMDb (alternativo a TMDB)
 - [ ] Configuración de PyInstaller para builds
@@ -92,8 +123,8 @@
 
 | Hito | Descripción | Estado |
 | ------ | ------------- | -------- |
-| **v0.2.0** | Vista previa + logging + UX mejorada | ✅ Completado |
-| **v0.3.0** | Tests de integración + IMDb | 📋 Pendiente |
+| **v0.2.0** | Vista previa + logging + UX mejorada + validación | ✅ Completado |
+| **v0.3.0** | Excepciones personalizadas + Tests de integración + IMDb | 🚧 En Progreso |
 | **v0.4.0** | Builds con PyInstaller | 📋 Pendiente |
 | **v1.0.0** | Versión estable para distribución | 📋 Pendiente |
 
