@@ -1,5 +1,7 @@
 """Configuration dialog window."""
 
+import logging
+
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -16,10 +18,14 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
+from src.utils.logger import get_logger
 from src.utils.validators import (
     validate_base_directory,
+    validate_pattern_placeholders,
     validate_pattern_syntax,
 )
+
+logger = get_logger(__name__)
 
 
 class ConfigDialog(QDialog):
@@ -286,35 +292,67 @@ class ConfigDialog(QDialog):
         if directory:
             self.base_dir_input.setText(directory)
 
-    def _validate_inputs(self) -> tuple[bool, str]:
+    def _validate_inputs(self) -> tuple[bool, list[str], list[str]]:
         """Validate user inputs before saving.
 
         Returns:
-            Tuple of (is_valid, warning_message)
+            Tuple of (is_valid, errors, warnings)
             - is_valid: True if configuration can be saved
-            - warning_message: Warning message if API key is missing/invalid
+            - errors: List of critical error messages (block saving)
+            - warnings: List of warning messages (allow saving)
         """
+        errors: list[str] = []
+        warnings: list[str] = []
+
+        # Validate API key (optional but warn if too short)
         api_key = self.api_key_input.text().strip()
-
-        # API key is optional, but warn if invalid format when provided
         if api_key and len(api_key) < 10:
-            return True, "La API key de TMDB parece muy corta. Verifica que sea correcta."
-
-        # Warn if no API key provided
+            warnings.append("La API key de TMDB parece muy corta. Verifica que sea correcta.")
         if not api_key:
-            return (
-                True,
-                "No se proporcionó API key. La búsqueda automática de metadatos no estará disponible.",
+            warnings.append(
+                "No se proporcionó API key. La búsqueda automática de metadatos no estará disponible."
             )
 
-        return True, ""
+        # Validate folder pattern
+        folder_pattern = self.folder_pattern_input.text()
+        if folder_pattern:
+            is_valid, error = validate_pattern_placeholders(folder_pattern, "both")
+            if not is_valid:
+                errors.append(f"Patrón de Carpeta: {error}")
+
+        # Validate file pattern
+        file_pattern = self.file_pattern_input.text()
+        if file_pattern:
+            is_valid, error = validate_pattern_placeholders(file_pattern, "both")
+            if not is_valid:
+                errors.append(f"Patrón de Archivo: {error}")
+
+        # Validate base directory (optional, but if provided must be valid)
+        base_dir = self.base_dir_input.text()
+        if base_dir:
+            is_valid, error = validate_base_directory(base_dir, must_exist=True)
+            if not is_valid:
+                errors.append(f"Directorio Base: {error}")
+
+        return len(errors) == 0, errors, warnings
 
     def _on_save(self) -> None:
         """Save configuration values."""
-        # Validate inputs (non-blocking)
-        is_valid, warning_msg = self._validate_inputs()
+        # Validate inputs
+        is_valid, errors, warnings = self._validate_inputs()
 
-        # Always save configuration regardless of warnings
+        # If there are critical errors, show them and don't save
+        if errors:
+            error_msg = "No se pudo guardar la configuración:\n\n" + "\n".join(f"• {e}" for e in errors)
+            QMessageBox.critical(
+                self,
+                "Errores de Validación",
+                error_msg,
+                QMessageBox.StandardButton.Ok,
+            )
+            return
+
+        # Save configuration
         try:
             # API
             self.config.set("api.tmdb_api_key", self.api_key_input.text().strip())
@@ -340,16 +378,26 @@ class ConfigDialog(QDialog):
             self.config.set("cache.enabled", self.cache_enabled_check.isChecked())
             self.config.set("cache.ttl_days", self.cache_ttl_spin.value())
 
+            logger.info("Configuration saved successfully")
+            logger.debug(
+                "Saved config: base_dir=%s, folder_pattern=%s, file_pattern=%s",
+                self.base_dir_input.text(),
+                self.folder_pattern_input.text(),
+                self.file_pattern_input.text(),
+            )
+
         except Exception as e:
+            logger.error("Failed to save configuration: %s", e, exc_info=True)
             QMessageBox.critical(self, "Error", f"No se pudo guardar la configuración: {str(e)}")
             return
 
         # Show appropriate message
-        if warning_msg:
+        if warnings:
+            warning_msg = "La configuración se ha guardado correctamente, pero se encontraron las siguientes advertencias:\n\n" + "\n".join(f"• {w}" for w in warnings)
             QMessageBox.warning(
                 self,
                 "Advertencia",
-                f"{warning_msg}\n\nLa configuración se ha guardado correctamente.",
+                warning_msg,
                 QMessageBox.StandardButton.Ok,
             )
         else:
